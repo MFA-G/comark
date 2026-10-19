@@ -463,6 +463,11 @@ function healRegion(text: string, o: Opts): string {
   let htmlLt = -1
   let starInWord = false
   let starDisabled = false
+  // The last word-internal `*` run left literal, as its length and the frame
+  // depth it was seen at. Until the next whitespace, a same-length run that
+  // would open pairs with it instead, so `这是**中文。**后续` gets no closer.
+  let starSkippedLen = 0
+  let starSkippedDepth = -1
 
   for (let i = 0; i < len; i++) {
     const c = text.charCodeAt(i)
@@ -471,6 +476,7 @@ function healRegion(text: string, o: Opts): string {
     if (c === 10 /* \n */) {
       lineStart = i + 1
       starInWord = false
+      starSkippedLen = 0
       htmlLt = -1
       continue
     }
@@ -489,6 +495,7 @@ function healRegion(text: string, o: Opts): string {
 
     if (c === 32 || c === 9 || c === 13) {
       starInWord = false
+      starSkippedLen = 0
       continue
     }
     if (c === 92 /* \ */) {
@@ -555,10 +562,24 @@ function healRegion(text: string, o: Opts): string {
         // Word-internal `*` only counts once the word already holds a delimiter
         // (`*foo*bar*baz` pairs up, `abc*123` stays literal).
         const inWord = attachedLeft && isAlnum(prev) && isAlnum(next)
-        if (!inWord || starInWord) {
+        if (inWord && !starInWord) {
+          starSkippedLen = n
+          starSkippedDepth = frames.length
+        } else {
           if (attachedLeft && top !== null && top.k === F_STAR && (!inWord || top.len === n)) {
             closeRun(frames, F_STAR, n)
             starInWord = true
+            i += n - 1
+            continue
+          }
+          // An attached run after punctuation (`中文。**后续`) that would open
+          // instead pairs with a word-internal run left literal earlier in the
+          // same whitespace-free stretch, with no frame opened or closed in
+          // between. CommonMark cannot pair the two, and the second run is a
+          // would-be closer far more often than an opener (CJK bold that ends
+          // in punctuation), so it is left literal instead of being closed.
+          if (attachedLeft && !inWord && starSkippedLen === n && starSkippedDepth === frames.length) {
+            starSkippedLen = 0
             i += n - 1
             continue
           }

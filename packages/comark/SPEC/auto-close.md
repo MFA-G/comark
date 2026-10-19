@@ -2488,6 +2488,33 @@ A shorter or different marker is not a closer either:
 + *기울임*으로 *another*
 ```
 
+A word-internal run and a later same-length run after punctuation (bold text that ends in CJK punctuation) cannot pair under CommonMark, so neither gets a closer.
+
+```diff
+- 这是**中文。**后续文字
++ 这是**中文。**后续文字
+```
+
+```diff
+- 这是*中文。*后续文字
++ 这是*中文。*后续文字
+```
+
+```diff
+- foo**bar.**baz
++ foo**bar.**baz
+```
+
+```diff
+- 这是**中文。**后续 **more
++ 这是**中文。**后续 **more**
+```
+
+```diff
+- foo**bar and (**baz
++ foo**bar and (**baz**
+```
+
 ```diff
 - *foo* bar*baz
 + *foo* bar*baz
