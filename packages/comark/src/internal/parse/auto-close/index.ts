@@ -578,7 +578,14 @@ function healRegion(text: string, o: Opts): string {
           // between. CommonMark cannot pair the two, and the second run is a
           // would-be closer far more often than an opener (CJK bold that ends
           // in punctuation), so it is left literal instead of being closed.
-          if (attachedLeft && !inWord && starSkippedLen === n && starSkippedDepth === frames.length) {
+          // After opening punctuation (`bar(**baz`) it is an opener, as usual.
+          if (
+            attachedLeft &&
+            !inWord &&
+            starSkippedLen === n &&
+            starSkippedDepth === frames.length &&
+            !isOpeningPunct(prev)
+          ) {
             starSkippedLen = 0
             i += n - 1
             continue
@@ -1041,6 +1048,16 @@ function isAlnum(cp: string): boolean {
   // ASCII fast path covers nearly all markdown without a Unicode test.
   if (c <= 127) return (c >= 48 && c <= 57) || (c >= 65 && c <= 90) || (c >= 97 && c <= 122)
   return ALNUM_CP_RE.test(cp)
+}
+
+const OPENING_PUNCT_RE = /\p{Ps}|\p{Pi}/u
+
+/** Opening bracket or initial quote: `(`, `[`, `{`, `「`, `“`, ... */
+function isOpeningPunct(cp: string): boolean {
+  if (cp === '') return false
+  const c = cp.charCodeAt(0)
+  if (c <= 127) return c === 40 || c === 91 || c === 123
+  return OPENING_PUNCT_RE.test(cp)
 }
 
 function isAsciiAlpha(c: number): boolean {

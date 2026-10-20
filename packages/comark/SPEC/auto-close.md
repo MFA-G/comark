@@ -2515,6 +2515,18 @@ A word-internal run and a later same-length run after punctuation (bold text tha
 + foo**bar and (**baz**
 ```
 
+A run after opening punctuation still opens:
+
+```diff
+- foo**bar(**baz
++ foo**bar(**baz**
+```
+
+```diff
+- 这是**中文「**后续
++ 这是**中文「**后续**
+```
+
 ```diff
 - *foo* bar*baz
 + *foo* bar*baz
