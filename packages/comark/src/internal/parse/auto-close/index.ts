@@ -464,8 +464,9 @@ function healRegion(text: string, o: Opts): string {
   let starInWord = false
   let starDisabled = false
   // The last word-internal `*` run left literal, as its length and the frame
-  // depth it was seen at. Until the next whitespace, a same-length run that
-  // would open pairs with it instead, so `这是**中文。**后续` gets no closer.
+  // depth it was seen at. Until the next whitespace or the next `*` frame
+  // opened or closed, a same-length run that would open pairs with it
+  // instead, so `这是**中文。**后续` gets no closer.
   let starSkippedLen = 0
   let starSkippedDepth = -1
 
@@ -568,6 +569,7 @@ function healRegion(text: string, o: Opts): string {
         } else {
           if (attachedLeft && top !== null && top.k === F_STAR && (!inWord || top.len === n)) {
             closeRun(frames, F_STAR, n)
+            starSkippedLen = 0
             starInWord = true
             i += n - 1
             continue
@@ -592,6 +594,7 @@ function healRegion(text: string, o: Opts): string {
           }
           if (openRight && enabled) {
             frames.push({ k: F_STAR, len: n, pos: i })
+            starSkippedLen = 0
             starInWord = true
             i += n - 1
             continue

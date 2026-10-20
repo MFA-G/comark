@@ -2527,6 +2527,13 @@ A run after opening punctuation still opens:
 + 这是**中文「**后续**
 ```
 
+Once a frame opens or closes after the word-internal run, a later run no longer pairs with it:
+
+```diff
+- foo**bar(**x**)**baz
++ foo**bar(**x**)**baz**
+```
+
 ```diff
 - *foo* bar*baz
 + *foo* bar*baz
